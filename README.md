@@ -47,7 +47,15 @@ cd Wdistroapp
 flutter pub get
 ```
 
-### 3. Run the app
+### 3. Configure environment constants
+
+Copy the sample configuration file and add your environment settings:
+
+```bash
+cp lib/core/constants.dart.example lib/core/constants.dart
+```
+
+### 4. Run the app
 
 Connect a mobile device or start an emulator, then execute:
 

@@ -1,0 +1,10 @@
+// Sample configuration constants.
+// Copy this file to lib/core/constants.dart and fill in your environment configuration.
+
+final String kBaseUrl = 'YOUR_API_BASE_URL_HERE';
+
+// Custom headers required for API endpoints
+const Map<String, String> kNgrokHeaders = {
+  'ngrok-skip-browser-warning': 'true',
+  'Content-Type': 'application/json',
+};
