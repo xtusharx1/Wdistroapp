@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../state/app_state.dart';
 import 'cart_item.dart';
 import 'product.dart';
 
@@ -12,6 +13,9 @@ class CartState extends ChangeNotifier {
   double get total => subtotal;
 
   void add(Product product) {
+    if (!AppState.instance.hasLicenseFor(product.requiredLicense)) {
+      throw 'License Required: You do not have the required license to add this product to cart.';
+    }
     final existing = _items.where((i) => i.product.id == product.id);
     if (existing.isNotEmpty) {
       if (existing.first.quantity >= product.stock) {

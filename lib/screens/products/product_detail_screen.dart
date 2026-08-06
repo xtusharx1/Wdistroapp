@@ -7,6 +7,8 @@ import '../../core/services/product_service.dart';
 import '../../widgets/product_image_placeholder.dart';
 import '../cart/cart_screen.dart';
 
+import '../../core/state/app_state.dart';
+
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
   final CartState cart;
@@ -24,13 +26,31 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   @override
   void initState() {
     super.initState();
-    _loadVariations();
+    if (!AppState.instance.hasLicenseFor(widget.product.requiredLicense)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text("You do not have the required license to view this product."),
+            backgroundColor: AppColors.red,
+          ));
+          Navigator.pop(context);
+        }
+      });
+    } else {
+      _loadVariations();
+    }
   }
 
   Future<void> _loadVariations() async {
     try {
       final full = await ProductService.instance.getProduct(widget.product.id);
-      if (mounted) setState(() => _variations = full.variations ?? []);
+      if (mounted) {
+        setState(() {
+          _variations = (full.variations ?? [])
+              .where((v) => AppState.instance.hasLicenseFor(v.requiredLicense))
+              .toList();
+        });
+      }
     } catch (_) {
       if (mounted) setState(() => _variations = []);
     }

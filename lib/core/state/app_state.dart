@@ -58,6 +58,23 @@ class AppShop {
         sellerPermit: j['seller_permit'] as String?,
         tobaccoLicense: j['tobacco_license'] as String?,
       );
+
+  /// Check if shop has required license/permit (e.g. tobacco, seller permit).
+  bool hasLicenseFor(String? requiredLicense) {
+    if (requiredLicense == null) return true;
+    final req = requiredLicense.trim().toLowerCase();
+    if (req.isEmpty || req == 'none' || req == 'unrestricted') return true;
+
+    if (req.contains('tobacco')) {
+      return approved && tobaccoLicense != null && tobaccoLicense!.trim().isNotEmpty;
+    }
+
+    if (req.contains('seller')) {
+      return approved && sellerPermit != null && sellerPermit!.trim().isNotEmpty;
+    }
+
+    return approved;
+  }
 }
 
 class AppState extends ChangeNotifier {
@@ -68,6 +85,15 @@ class AppState extends ChangeNotifier {
 
   AppShop? get shop => _shop;
   bool get isLoggedIn => _shop != null;
+
+  /// Check if currently active shop has the required license for a product/category.
+  bool hasLicenseFor(String? requiredLicense) {
+    if (requiredLicense == null) return true;
+    final req = requiredLicense.trim().toLowerCase();
+    if (req.isEmpty || req == 'none' || req == 'unrestricted') return true;
+    if (_shop == null) return false;
+    return _shop!.hasLicenseFor(requiredLicense);
+  }
 
   // Computed virtual AppUser derived from the Shop credentials to maintain backward compatibility in UI screens
   AppUser? get user => _shop != null ? AppUser(id: _shop!.id, name: _shop!.ownerName, email: _shop!.email) : null;

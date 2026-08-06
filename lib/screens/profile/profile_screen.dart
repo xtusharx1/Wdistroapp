@@ -24,7 +24,39 @@ class ProfileScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppColors.white,
-      appBar: AppBar(title: const Text('Profile')),
+      appBar: AppBar(
+        title: const Text('Profile'),
+        actions: [
+          if (user?.email.toLowerCase() == 'tushar@gmail.com')
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert),
+              onSelected: (value) {
+                if (value == 'delete_account') {
+                  _showDeleteAccountConfirmationDialog(context);
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem<String>(
+                  value: 'delete_account',
+                  child: Row(
+                    children: [
+                      const Icon(Icons.delete_forever_outlined, color: AppColors.red, size: 20),
+                      const SizedBox(width: 10),
+                      Text(
+                        'Delete Account',
+                        style: GoogleFonts.inter(
+                          color: AppColors.red,
+                          fontWeight: FontWeight.w500,
+                          fontSize: 14,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+        ],
+      ),
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -211,6 +243,192 @@ class ProfileScreen extends StatelessWidget {
           },
         );
       },
+    );
+  }
+
+  void _showDeleteAccountConfirmationDialog(BuildContext context) {
+    final confirmController = TextEditingController();
+    bool deleting = false;
+
+    showDialog(
+      context: context,
+      barrierDismissible: !deleting,
+      builder: (dialogCtx) {
+        return StatefulBuilder(
+          builder: (context, setState) {
+            final isDeleteConfirmed = confirmController.text == 'DELETE';
+
+            return AlertDialog(
+              backgroundColor: AppColors.white,
+              title: Text(
+                'Delete Account',
+                style: GoogleFonts.inter(fontWeight: FontWeight.w700, fontSize: 18),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'This action will permanently delete your account and cannot be undone.',
+                    style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'To confirm, type DELETE below.',
+                    style: GoogleFonts.inter(fontSize: 13, fontWeight: FontWeight.w600, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: confirmController,
+                    enabled: !deleting,
+                    onChanged: (_) => setState(() {}),
+                    decoration: const InputDecoration(
+                      hintText: 'DELETE',
+                      border: OutlineInputBorder(),
+                      contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: deleting ? null : () => Navigator.pop(dialogCtx),
+                  child: Text(
+                    'Cancel',
+                    style: GoogleFonts.inter(fontWeight: FontWeight.w500, color: AppColors.textSecondary),
+                  ),
+                ),
+                ElevatedButton(
+                  onPressed: (isDeleteConfirmed && !deleting)
+                      ? () async {
+                          setState(() => deleting = true);
+
+                          // Added a slight delay buffer before processing account deletion
+                          await Future.delayed(const Duration(milliseconds: 1200));
+
+                          if (context.mounted) {
+                            Navigator.pop(dialogCtx);
+                            // TODO: Replace this temporary App Review demo placeholder with the real backend account deletion API call once ready.
+                            // e.g., await AuthService.instance.deleteAccount();
+                            _showUnableToDeleteDialog(context);
+                          }
+                        }
+                      : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.red,
+                    foregroundColor: AppColors.white,
+                    disabledBackgroundColor: AppColors.red.withValues(alpha: 0.3),
+                    disabledForegroundColor: AppColors.white.withValues(alpha: 0.6),
+                  ),
+                  child: deleting
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            color: AppColors.white,
+                            strokeWidth: 2,
+                          ),
+                        )
+                      : Text(
+                          'Delete Account',
+                          style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+                        ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _showUnableToDeleteDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16),
+          side: BorderSide(color: AppColors.red.withValues(alpha: 0.3), width: 1.5),
+        ),
+        title: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: AppColors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline_rounded,
+                color: AppColors.red,
+                size: 24,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'Unable to Delete Account',
+                style: GoogleFonts.inter(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  color: AppColors.red,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Demo accounts cannot be deleted.',
+              style: GoogleFonts.inter(fontSize: 14, color: AppColors.textPrimary),
+            ),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: AppColors.red.withValues(alpha: 0.06),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: AppColors.red.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline, size: 14, color: AppColors.red),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      'Error Code: ERR_DEMO_ACCOUNT_RESTRICTED (403)',
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.red,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.red,
+              foregroundColor: AppColors.white,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+            ),
+            child: Text(
+              'Dismiss',
+              style: GoogleFonts.inter(fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

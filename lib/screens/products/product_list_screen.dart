@@ -4,6 +4,7 @@ import '../../core/theme/app_colors.dart';
 import '../../core/models/product.dart';
 import '../../core/models/cart_state.dart';
 import '../../core/services/product_service.dart';
+import '../../core/state/app_state.dart';
 import '../../widgets/product_card.dart';
 import '../../widgets/empty_state_widget.dart';
 import 'product_detail_screen.dart';
@@ -12,10 +13,7 @@ import 'scanner_screen.dart';
 const Map<String, List<String>> kCategoryMap = {
   'General Merchandise': ['Cables', 'Toys', 'Misc', 'Clothing', 'Supplements', 'Medicine (OTC)'],
   'Glass': ['Glass Rigs', 'Glass Accessories', 'Grinders'],
-  'Tobacco': ['Wraps', 'Cigars', 'Cigarillos', 'Rolling Tobacco', 'Chew/Pouches'],
   'Lighters': ['Pocket Torches', 'High Flame', 'Butane', 'Torch Lighters'],
-  'Vape': ['Disposable', 'Hardware', 'Vape Accessories', 'Juices'],
-  'Rolling Papers': ['Papers', 'Rolling Machine', 'Tips', 'Cones']
 };
 
 class ProductListScreen extends StatefulWidget {
@@ -59,7 +57,7 @@ class _ProductListScreenState extends State<ProductListScreen> {
       _hasMore = true;
       _fetch();
     } else if (widget.initialProducts.isNotEmpty) {
-      _products = List.from(widget.initialProducts);
+      _products = widget.initialProducts.where((p) => AppState.instance.hasLicenseFor(p.requiredLicense)).toList();
       _hasMore = true;
       _page = 1;
     } else {

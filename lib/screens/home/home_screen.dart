@@ -25,14 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Product> _featuredProducts = [];
   bool _loading = true;
 
-  List<Map<String, dynamic>> _categories = [
-    {'name': 'General Merchandise', 'icon': Icons.grid_view_rounded},
-    {'name': 'Glass', 'icon': Icons.wine_bar_rounded},
-    {'name': 'Tobacco', 'icon': Icons.smoking_rooms_rounded},
-    {'name': 'Lighters', 'icon': Icons.local_fire_department_rounded},
-    {'name': 'Vape', 'icon': Icons.air_rounded},
-    {'name': 'Rolling Papers', 'icon': Icons.sticky_note_2_rounded},
-  ];
+  List<Map<String, dynamic>> _categories = [];
 
   IconData _getCategoryIcon(String name) {
     switch (name) {
@@ -117,13 +110,20 @@ class _HomeScreenState extends State<HomeScreen> {
           ProductListScreen(cart: widget.cart, initialProducts: _products),
     ),
   );
+  Future<void> _refreshAll() async {
+    await Future.wait([
+      _loadCategories(),
+      _loadProducts(),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.white,
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: _loadProducts,
+          onRefresh: _refreshAll,
           child: ListView(
             children: [
               // ── App Bar ─────────────────────────────────────────────
@@ -229,98 +229,99 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
 
               // ── Browse Categories Header ─────────────────────────────
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Browse Categories',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    GestureDetector(
-                      onTap: _openProductList,
-                      child: Text(
-                        'Browse All',
+              if (_categories.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Browse Categories',
                         style: GoogleFonts.inter(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.primary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // ── Categories List ──────────────────────────────────────
-              SizedBox(
-                height: 96,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  itemCount: _categories.length,
-                  itemBuilder: (context, index) {
-                    final cat = _categories[index];
-                    return GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => ProductListScreen(
-                              cart: widget.cart,
-                              initialCategory: cat['name'] as String,
-                            ),
+                      GestureDetector(
+                        onTap: _openProductList,
+                        child: Text(
+                          'Browse All',
+                          style: GoogleFonts.inter(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.primary,
                           ),
-                        );
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(right: 12),
-                        width: 80,
-                        child: Column(
-                          children: [
-                            Container(
-                              width: 54,
-                              height: 54,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary.withValues(alpha: 0.06),
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: AppColors.primary.withValues(alpha: 0.15),
-                                  width: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ── Categories List ──────────────────────────────────────
+                SizedBox(
+                  height: 96,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: _categories.length,
+                    itemBuilder: (context, index) {
+                      final cat = _categories[index];
+                      return GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => ProductListScreen(
+                                cart: widget.cart,
+                                initialCategory: cat['name'] as String,
+                              ),
+                            ),
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(right: 12),
+                          width: 80,
+                          child: Column(
+                            children: [
+                              Container(
+                                width: 54,
+                                height: 54,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary.withValues(alpha: 0.06),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: AppColors.primary.withValues(alpha: 0.15),
+                                    width: 1,
+                                  ),
+                                ),
+                                child: Icon(
+                                  cat['icon'] as IconData,
+                                  color: AppColors.primary,
+                                  size: 24,
                                 ),
                               ),
-                              child: Icon(
-                                cat['icon'] as IconData,
-                                color: AppColors.primary,
-                                size: 24,
+                              const SizedBox(height: 6),
+                              Text(
+                                cat['name'] as String,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.inter(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 6),
-                            Text(
-                              cat['name'] as String,
-                              textAlign: TextAlign.center,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
-                                color: AppColors.textPrimary,
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
+                      );
+                    },
+                  ),
                 ),
-              ),
-
-              const SizedBox(height: 24),
+                const SizedBox(height: 24),
+              ],
 
               // ── Popular This Week ────────────────────────────────────
               Padding(
